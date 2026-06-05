@@ -28,7 +28,7 @@
 [![Skills](https://img.shields.io/badge/skills.sh-Compatible-green)](https://skills.sh)
 
 ```
-npx skills add alchaincyf/darwin-skill
+hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
 ```
 
 </div>
@@ -85,7 +85,7 @@ npx skills add alchaincyf/darwin-skill
 
 ## 为什么做这个
 
-Agent Skill 生态在快速扩张。Claude Code、Codex、OpenClaw、Trae、CodeBuddy 等工具都支持 SKILL.md 格式。当你有 10 个 Skills 时可以手动维护；当你有 60+ 个 Skills 时，你需要一个系统。
+Agent Skill 生态在快速扩张。Hermes、Claude Code、Codex、OpenClaw、Trae、CodeBuddy 等工具都支持 SKILL.md 格式。当你有 10 个 Skills 时可以手动维护；当你有 60+ 个 Skills 时，你需要一个系统。
 
 传统的 Skill 审查是**纯结构性的**：检查格式对不对、步骤有没有编号、路径能不能访问。但一个格式完美的 Skill，跑出来的效果可能很差。
 
@@ -171,12 +171,19 @@ Agent Skill 生态在快速扩张。Claude Code、Codex、OpenClaw、Trae、Code
 ## 快速开始
 
 ```bash
-npx skills add alchaincyf/darwin-skill
+hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
 ```
 
 安装后在任何支持 Skill 的 Agent 工具中说「优化所有skills」或「优化某个skill」就行。
 
-无法访问 GitHub 的朋友，可以直接下载 zip 包：[darwin-skill.zip](https://pub-161ae4b5ed0644c4a43b5c6412287e03.r2.dev/skills/darwin-skill.zip)，解压后把 SKILL.md 放到 `~/.claude/skills/darwin-skill/` 目录即可。
+无法访问 GitHub 的朋友，可以下载 zip 包并按当前 runtime 的 skill 目录安装。Hermes 用户可将目录放到 `~/.hermes/skills/darwin-skill-harness/`；其他 runtime 请使用各自的 `skills/<skill-name>/` 约定路径。
+
+如果需要生成成果卡片截图，先在仓库目录安装脚本依赖：
+
+```bash
+npm ci
+node scripts/screenshot.mjs templates/result-card.html /tmp/darwin-result-card.png
+```
 
 ---
 

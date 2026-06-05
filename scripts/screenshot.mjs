@@ -1,26 +1,80 @@
 #!/usr/bin/env node
 /**
- * Darwin Skill - 高清截图脚本
+ * Darwin Skill - cross-platform high-resolution screenshot helper
  *
- * 用法: node scripts/screenshot.mjs [html文件路径] [输出png路径]
+ * Usage: node scripts/screenshot.mjs [html-file] [output-png] [--open]
  *
- * 特性:
- * - 2x deviceScaleFactor，输出高清图
- * - 只截 .card 元素，无多余背景
- * - 等待字体加载完成
- * - 截完自动用 open 命令打开图片
+ * Features:
+ * - Resolves Playwright from the project/local/global Node module path instead of
+ *   a user-specific absolute path.
+ * - Works on macOS, Linux and Windows file URL/path handling.
+ * - Captures only the .card element at 2x deviceScaleFactor.
+ * - Opens the generated image only when --open is passed.
  */
 
 import { createRequire } from 'module';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+import { spawn } from 'child_process';
+
 const require = createRequire(import.meta.url);
 
-// 使用全局安装的 playwright-core
-const pw = require('/Users/alchain/.npm-global/lib/node_modules/playwright/node_modules/playwright-core');
+function resolvePath(input, fallbackUrl) {
+  return resolve(input || fileURLToPath(fallbackUrl));
+}
 
-const htmlPath = process.argv[2] || new URL('../templates/result-card.html', import.meta.url).pathname;
-const outputPath = process.argv[3] || new URL('../templates/result-card.png', import.meta.url).pathname;
+async function loadPlaywright() {
+  const candidates = ['playwright', 'playwright-core'];
+
+  for (const name of candidates) {
+    try {
+      return await import(name);
+    } catch {
+      // ESM package import failed; try CommonJS resolution below.
+    }
+
+    try {
+      return require(name);
+    } catch {
+      // Keep looking.
+    }
+  }
+
+  throw new Error(
+    'Playwright is not installed. Install it with `npm install -D playwright`, ' +
+    '`npm install -D playwright-core`, or run through an environment that provides Playwright.'
+  );
+}
+
+function openImageIfRequested(outputPath) {
+  if (!process.argv.includes('--open')) return;
+
+  const opener = process.platform === 'darwin'
+    ? 'open'
+    : process.platform === 'win32'
+      ? 'cmd'
+      : 'xdg-open';
+  const args = process.platform === 'win32'
+    ? ['/c', 'start', '', outputPath]
+    : [outputPath];
+
+  const child = spawn(opener, args, { stdio: 'ignore', detached: true });
+  child.on('error', (err) => {
+    console.warn(`Unable to open image automatically: ${err.message}`);
+  });
+  child.unref();
+}
+
+const htmlPath = resolvePath(process.argv[2], new URL('../templates/result-card.html', import.meta.url));
+const outputPath = resolvePath(process.argv[3], new URL('../templates/result-card.png', import.meta.url));
 
 async function screenshot() {
+  if (!existsSync(htmlPath)) {
+    throw new Error(`HTML file does not exist: ${htmlPath}`);
+  }
+
+  const pw = await loadPlaywright();
   const browser = await pw.chromium.launch();
 
   try {
@@ -30,38 +84,32 @@ async function screenshot() {
     });
 
     const page = await context.newPage();
+    await page.goto(pathToFileURL(htmlPath).href, { waitUntil: 'networkidle' });
 
-    await page.goto(`file://${htmlPath}`, { waitUntil: 'networkidle' });
-
-    // 等待字体加载
     await page.evaluate(() => document.fonts.ready);
-    // 额外等待确保渲染完成
     await page.waitForTimeout(2000);
 
-    // 只截 .card 元素
-    const card = await page.locator('.card');
+    const card = page.locator('.card').first();
+    await card.waitFor({ state: 'visible', timeout: 5000 });
     await card.screenshot({
       path: outputPath,
       type: 'png',
     });
 
-    console.log(`截图完成: ${outputPath}`);
-
-    // 获取图片尺寸信息
     const box = await card.boundingBox();
-    console.log(`卡片尺寸: ${Math.round(box.width)}x${Math.round(box.height)}px (CSS)`);
-    console.log(`输出尺寸: ${Math.round(box.width * 2)}x${Math.round(box.height * 2)}px (2x高清)`);
-
+    if (box) {
+      console.log(`Card size: ${Math.round(box.width)}x${Math.round(box.height)}px (CSS)`);
+      console.log(`Output size: ${Math.round(box.width * 2)}x${Math.round(box.height * 2)}px (2x)`);
+    }
+    console.log(`Screenshot saved: ${outputPath}`);
   } finally {
     await browser.close();
   }
 
-  // 自动打开图片
-  const { execSync } = require('child_process');
-  execSync(`open "${outputPath}"`);
+  openImageIfRequested(outputPath);
 }
 
-screenshot().catch(err => {
-  console.error('截图失败:', err.message);
+screenshot().catch((err) => {
+  console.error('Screenshot failed:', err.message);
   process.exit(1);
 });

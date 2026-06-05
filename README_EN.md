@@ -22,7 +22,7 @@ Inspired by [Karpathy's autoresearch](https://github.com/karpathy/autoresearch).
 [![Skills](https://img.shields.io/badge/skills.sh-Compatible-green)](https://skills.sh)
 
 ```
-npx skills add alchaincyf/darwin-skill
+hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
 ```
 
 </div>
@@ -81,7 +81,7 @@ Evaluate → Improve → Test → Human Confirm → Keep or Revert. Repeat.
 
 ## Why This Exists
 
-Agent skill ecosystems are expanding fast. Claude Code, Codex, OpenClaw, Trae, CodeBuddy and more all support the SKILL.md format. When you have 10 skills, you can maintain them by hand. When you have 60+, you need a system.
+Agent skill ecosystems are expanding fast. Hermes, Claude Code, Codex, OpenClaw, Trae, CodeBuddy and more all support the SKILL.md format. When you have 10 skills, you can maintain them by hand. When you have 60+, you need a system.
 
 Traditional skill review is purely structural: does the frontmatter look right? Are the steps numbered? Do the file paths exist? But a perfectly formatted skill can still produce terrible output.
 
@@ -167,12 +167,19 @@ Round 2 scored 75, below the current best of 78. Auto-reverted. Effective baseli
 ## Quick Start
 
 ```bash
-npx skills add alchaincyf/darwin-skill
+hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
 ```
 
 After installation, tell your agent: "optimize all skills" or "optimize [skill-name]". Works with any tool that supports the SKILL.md format.
 
-Can't access GitHub? Download the zip: [darwin-skill.zip](https://pub-161ae4b5ed0644c4a43b5c6412287e03.r2.dev/skills/darwin-skill.zip). Extract and place SKILL.md in `~/.claude/skills/darwin-skill/`.
+Can't access GitHub? Download the zip and install it into the skill directory used by your runtime. Hermes users can place it under `~/.hermes/skills/darwin-skill-harness/`; other runtimes should use their own `skills/<skill-name>/` convention.
+
+To generate result-card screenshots, install script dependencies in the repository first:
+
+```bash
+npm ci
+node scripts/screenshot.mjs templates/result-card.html /tmp/darwin-result-card.png
+```
 
 ---
 

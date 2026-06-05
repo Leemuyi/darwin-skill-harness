@@ -22,7 +22,7 @@
 | 措辞钉死 | 「在 Claude Code 里」「Cursor 用户可以」「Codex 中使用」「Claude Code skill」 | 让 agent 解析时误判为"不是给我用的" |
 | 安装命令钉死 | 只给 `~/.claude/skills/` 路径、只给 `/plugin install`、只给某 runtime 私有 CLI | 不知道这是 Claude Code 命令的 agent 会拒绝 |
 | 工具调用钉死 | 工作流里硬编码 `mcp__claude-in-chrome__*`、`PostToolUse hook` 等单 runtime 能力，且不给替代方案 | 其他 runtime 没这些工具 → 流程跑不通 |
-| 路径硬编码 | `~/.claude/skills/xxx/`、`.claude/agents/yyy` 作为唯一路径 | 其他 runtime 用 `~/.cursor/skills/` `~/.codex/skills/` |
+| 路径硬编码 | `~/.claude/skills/xxx/`、`.claude/agents/yyy` 作为唯一路径 | 其他 runtime 可能使用 `~/.hermes/skills/`、`~/.cursor/skills/`、`~/.codex/skills/` 或项目内 skills 目录 |
 
 ---
 
@@ -34,7 +34,7 @@
 | "Claude Code skill" | "Agent Skill" |
 | "Claude Code 用户" | "skills-aware agent 用户" |
 | 单一 badge 钉死 | `Agent Skills Standard` + `skills.sh Compatible` + `Multi-Runtime` 三个中立 badge |
-| 只给 `npx skills add ...` 一行 | 三层结构：① 自动检测的一行命令 ② 折叠展开的各 runtime 手动路径 ③ 「作为参考资料 cat 进 context」fallback |
+| 只给单一 runtime 的安装命令 | 三层结构：① 首选当前 runtime 的安装命令（Hermes 示例：`hermes skills install ...`）② 各 runtime 手动路径表 ③ 「作为参考资料读入 context」fallback |
 | 工具名硬编码 | "用一个 browser automation 工具（例如 Claude 的 chrome MCP、Playwright 等）" |
 
 ---

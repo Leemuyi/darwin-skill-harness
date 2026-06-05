@@ -9,7 +9,7 @@ description: "Darwin Skill 2.0 (达尔文.skill 2.0): autonomous skill optimizer
 >
 > 借鉴 Karpathy autoresearch 的自主实验循环，对 skills 进行持续优化。
 > 核心理念：**评估 → 改进 → 实测验证 → 人类确认 → 保留或回滚 → 生成成果卡片**
-> GitHub: https://github.com/alchaincyf/darwin-skill
+> GitHub: https://github.com/Leemuyi/darwin-skill-harness
 
 ---
 
@@ -112,7 +112,7 @@ frontmatter 触发词、花叔生态内部 skill 名引用、明确标注 runtim
 
 ```
 1. 确认优化范围：
-   - 全部skills → 扫描 .claude/skills/*/SKILL.md
+   - 全部 skills → 扫描当前 runtime 的 skills 目录，例如 Hermes 的 `~/.hermes/skills/*/SKILL.md`
    - 指定skills → 用户指定列表
 2. 创建 git 分支：auto-optimize/YYYYMMDD-HHMM
 3. 初始化 results.tsv（如不存在）
@@ -284,7 +284,7 @@ timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
 ```
 
 新增 `eval_mode` 列：`full_test`（跑了子agent测试）或 `dry_run`（模拟推演）。
-文件位置：`.claude/skills/darwin-skill/results.tsv`
+文件位置：当前 skill 目录下的 `results.tsv`（Hermes 示例：`~/.hermes/skills/darwin-skill-harness/results.tsv`）
 
 ---
 
@@ -457,13 +457,15 @@ timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
    - data-field="improvement-1/2/3" → 实际改进摘要
    - data-field="date" → 当前日期
 3. 随机选择风格：hash 设为 swiss/terminal/newspaper 之一
-4. 用 scripts/screenshot.mjs 截图（2x 高清，只截 .card 元素，自动 open 图片）：
-   node .claude/skills/darwin-skill/scripts/screenshot.mjs \
-     /abs/path/to/card.html /abs/path/to/output.png
+4. 用 scripts/screenshot.mjs 截图（2x 高清，只截 .card 元素；需要自动打开时追加 `--open`）：
+   node scripts/screenshot.mjs \
+     /abs/path/to/card.html /abs/path/to/output.png [--open]
    # 回退方案（脚本失败时）：
+   npm ci
    npx playwright screenshot "file:///path/to/card.html#[theme]" \
      output.png --viewport-size=960,1280 --wait-for-timeout=2000
 5. 提示用户查看成果卡片 PNG
+```
 
 ### 资源文件速查
 
@@ -471,7 +473,7 @@ timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
 |---|---|
 | `templates/result-card.html` | 3风格主模板（swiss/terminal/newspaper，hash切换） |
 | `templates/result-card-dark.html` / `-white.html` | 单一风格替代模板（需要锁定风格时用） |
-| `scripts/screenshot.mjs` | 2x 高清截图，只截 .card，自动 open |
+| `scripts/screenshot.mjs` | 2x 高清截图，只截 .card；跨平台解析路径，`--open` 时才自动打开 |
 | `results.tsv` | 历次优化日志（9列含 eval_mode） |
 | `{skill目录}/test-prompts.json` | 每个 skill 的测试 prompt 集（用于维度8实测） |
 
@@ -483,4 +485,4 @@ timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
 ### 品牌元素
 
 - 顶部：Darwin.skill 品牌标识 + 日期
-- 底部：「Train your Skills like you train your models」+ github.com/alchaincyf/darwin-skill
+- 底部：「Train your Skills like you train your models」+ github.com/Leemuyi/darwin-skill-harness
