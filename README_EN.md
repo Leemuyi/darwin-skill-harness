@@ -21,8 +21,10 @@ Inspired by [Karpathy's autoresearch](https://github.com/karpathy/autoresearch).
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-Compatible-blueviolet)](https://skills.sh)
 [![Skills](https://img.shields.io/badge/skills.sh-Compatible-green)](https://skills.sh)
 
-```
-hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
+```bash
+git clone https://github.com/Leemuyi/darwin-skill-harness.git
+mkdir -p ~/.hermes/skills
+cp -R darwin-skill-harness ~/.hermes/skills/darwin-skill-harness
 ```
 
 </div>
@@ -167,16 +169,21 @@ Round 2 scored 75, below the current best of 78. Auto-reverted. Effective baseli
 ## Quick Start
 
 ```bash
-hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
+git clone https://github.com/Leemuyi/darwin-skill-harness.git
+mkdir -p ~/.hermes/skills
+cp -R darwin-skill-harness ~/.hermes/skills/darwin-skill-harness
 ```
 
-After installation, tell your agent: "optimize all skills" or "optimize [skill-name]". Works with any tool that supports the SKILL.md format.
+> Why not install the raw `SKILL.md` URL? This skill depends on `scripts/`, `templates/`, `references/`, and `test-prompts.json`. Install the full directory so result-card generation and test-prompt workflows have their resources.
 
-Can't access GitHub? Download the zip and install it into the skill directory used by your runtime. Hermes users can place it under `~/.hermes/skills/darwin-skill-harness/`; other runtimes should use their own `skills/<skill-name>/` convention.
+After installation, tell your agent: "optimize all skills" or "optimize [skill-name]". In a Hermes CLI session, run `/reload-skills` to reload the copied skill.
+
+Can't access GitHub? Download the zip and install the full directory into the skill directory used by your runtime. Hermes users can place it under `~/.hermes/skills/darwin-skill-harness/`; other runtimes should use their own `skills/<skill-name>/` convention.
 
 To generate result-card screenshots, install script dependencies in the repository first:
 
 ```bash
+cd ~/.hermes/skills/darwin-skill-harness
 npm ci
 node scripts/screenshot.mjs templates/result-card.html /tmp/darwin-result-card.png
 ```

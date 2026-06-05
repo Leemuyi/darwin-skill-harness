@@ -27,8 +27,10 @@
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-Compatible-blueviolet)](https://skills.sh)
 [![Skills](https://img.shields.io/badge/skills.sh-Compatible-green)](https://skills.sh)
 
-```
-hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
+```bash
+git clone https://github.com/Leemuyi/darwin-skill-harness.git
+mkdir -p ~/.hermes/skills
+cp -R darwin-skill-harness ~/.hermes/skills/darwin-skill-harness
 ```
 
 </div>
@@ -171,16 +173,21 @@ Agent Skill 生态在快速扩张。Hermes、Claude Code、Codex、OpenClaw、Tr
 ## 快速开始
 
 ```bash
-hermes skills install https://raw.githubusercontent.com/Leemuyi/darwin-skill-harness/dev/SKILL.md --name darwin-skill-harness
+git clone https://github.com/Leemuyi/darwin-skill-harness.git
+mkdir -p ~/.hermes/skills
+cp -R darwin-skill-harness ~/.hermes/skills/darwin-skill-harness
 ```
 
-安装后在任何支持 Skill 的 Agent 工具中说「优化所有skills」或「优化某个skill」就行。
+> 为什么不用 raw `SKILL.md` 安装？这个 skill 依赖 `scripts/`、`templates/`、`references/` 和 `test-prompts.json`。必须安装完整目录，否则成果卡片生成和测试 prompt 工作流会缺资源。
 
-无法访问 GitHub 的朋友，可以下载 zip 包并按当前 runtime 的 skill 目录安装。Hermes 用户可将目录放到 `~/.hermes/skills/darwin-skill-harness/`；其他 runtime 请使用各自的 `skills/<skill-name>/` 约定路径。
+安装后在任何支持 Skill 的 Agent 工具中说「优化所有skills」或「优化某个skill」就行。Hermes CLI 会话中可用 `/reload-skills` 重新加载已复制的 skill。
+
+无法访问 GitHub 的朋友，可以下载 zip 包并按当前 runtime 的 skill 目录安装。Hermes 用户可将完整目录放到 `~/.hermes/skills/darwin-skill-harness/`；其他 runtime 请使用各自的 `skills/<skill-name>/` 约定路径。
 
 如果需要生成成果卡片截图，先在仓库目录安装脚本依赖：
 
 ```bash
+cd ~/.hermes/skills/darwin-skill-harness
 npm ci
 node scripts/screenshot.mjs templates/result-card.html /tmp/darwin-result-card.png
 ```
