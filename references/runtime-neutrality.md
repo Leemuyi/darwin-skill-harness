@@ -6,7 +6,9 @@
 
 ## 背景
 
-花叔的 skills 基于 Anthropic 开放的 [Agent Skills](https://agentskills.io) 协议，应当能在 Claude Code、Codex、Cursor、OpenClaw、Hermes Agent、CodeBuddy、Workbuddy、Gemini CLI、OpenCode 等 50+ skills-compatible runtime 上通用。
+花叔的 skills 基于开放的 Agent Skills 约定，应当能在 Claude Code、Codex、Cursor、OpenClaw、Hermes Agent、CodeBuddy、Workbuddy、Gemini CLI、OpenCode 等 skills-compatible runtime 上通用。
+
+本仓库当前 fork 的主线是 **Hermes-native Darwin Skill Harness**：自身工作流优先使用 Hermes 的 `todo`、`session_search`、`delegate_task`、`skill_manage` 和 git 审计。这个 runtime 中立性审查仍用于评估被优化的目标 skills，避免目标 skill 被无意写成单一 runtime 专属。
 
 这是 skill 分发力的根本——一个被误判为「单一 runtime 绑定」的 skill，会被其他 agent 直接拒绝安装（实例：nuwa-skill 因 README 写「在 Claude Code 里使用」被 Marvis agent 拒绝）。
 

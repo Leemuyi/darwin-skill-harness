@@ -8,169 +8,51 @@
 
 <p align="center">
   <img src="assets/hero.gif" alt="Darwin Skill Animation" />
-  <br/>
-  <sub>动画由 <a href="https://github.com/alchaincyf/huashu-design">huashu-design</a> skill 制作</sub>
 </p>
 
 <div align="center">
 
-# 达尔文.skill 2.0
+# Hermes Native Darwin Skill Harness
 
-**像训练模型一样优化你的 Agent Skills。**
+**用 Hermes 工作流安全演化 Agent Skills。**
 
-受 [Andrej Karpathy 的 autoresearch](https://github.com/karpathy/autoresearch) 启发，将自主实验循环从模型训练搬到 Skill 优化领域。一个只能向前转的棘轮。
-
-**v2.0** · 更新于 2026-05-28 · 吸收微软研究院 [SkillLens](https://arxiv.org/abs/2605.23899) 与 [SkillOpt](https://arxiv.org/abs/2605.23904) 两篇论文做的系统性升级。
+Darwin Skill Harness 保留达尔文 2.0 的 9 维 rubric、`full_test` 优先、独立 judge、keep/revert 棘轮、`results.tsv` ledger、用户 checkpoint 和 high-risk blacklist，并迁移为 Hermes-native 的可执行工作流：`todo` 管状态，`session_search` 找证据，`delegate_task` 跑 full_test 和盲评，`skill_manage` 做安全 patch，git 负责可追踪审计。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.0-blue.svg)](#whats-new-in-20)
+[![Version](https://img.shields.io/badge/version-2.0--hermes-blue.svg)](#hermes-native-迁移)
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-Compatible-blueviolet)](https://skills.sh)
-[![Skills](https://img.shields.io/badge/skills.sh-Compatible-green)](https://skills.sh)
-
-```bash
-git clone https://github.com/Leemuyi/darwin-skill-harness.git
-mkdir -p ~/.hermes/skills
-cp -R darwin-skill-harness ~/.hermes/skills/darwin-skill-harness
-```
 
 </div>
 
 ---
 
-## What's New in 2.0
+## Hermes Native 迁移
 
-2.0 不是缝缝补补，是系统性吸收微软研究院 2026-05-22 两篇论文后的结构性升级。五个变化：
+这次迁移把原来的通用 Darwin Skill 优化方法论，改造成 Hermes 生态里的安全执行 harness。
 
-**1. 评分标准 8 维 → 9 维**（吸收 [SkillLens](https://arxiv.org/abs/2605.23899) 实证的 73.8% rubric 药方）
+| 保留机制 | Hermes 落地 |
+|---|---|
+| 9 维 rubric | `SKILL.md` 内完整保留 100 分权重 |
+| `full_test` 优先 | `delegate_task` 先跑 with_skill / baseline / judge |
+| 独立 judge | judge 子任务只看匿名输出，不共享编辑上下文 |
+| keep/revert 棘轮 | 分数严格上升才 keep，否则 git revert/恢复 |
+| `results.tsv` ledger | 新增字段模板和字段说明 |
+| 用户 checkpoint | scope、测试 prompt、patch、commit、cron 前都 STOP |
+| high-risk blacklist | secrets、外部副作用、cron、config、删除/重命名都受控 |
 
-- 原「错误处理」维度升级为 **失败模式编码** (Failure Mechanism Encoding)：不只是「告诉 agent 别犯错」，而是把已知失败路径显式编码进 skill
-- 原「明确性」维度升级为 **可执行具体性** (Actionable Specificity)：明文禁止「建议/可以考虑/根据情况/灵活把握/视情况而定」等模糊词
-- 新增第九维 **高风险行动黑名单** (High-Risk Action Blacklist)：rm/git reset --hard/force push 等破坏性操作必须在 skill 中显式列禁
+新增资源：
 
-**2. 验证机制对齐 SkillOpt 的 validation-gated 设计**
-
-- 多评委独立审查：每轮启动 2 个独立评委
-- 评委不复用：下一轮启动全新评委，避免锚定效应
-- 早停机制：单轮涨幅 < 1 分自动停手，避免凑分堆冗余
-- 干跑模式控制：干跑比例 > 30% 自动告警
-
-**3. Human in the Loop 三层守关**（达尔文区别于 SkillOpt 全自动设计的核心）
-
-- Phase 1 基线评估：自动 + 人工审报告，决定改什么
-- Phase 2 单维度优化：🔴 CHECKPOINT 强制暂停，等用户确认
-- Phase 2.5 测试提示词跑（可选）
-- Phase 3 回归测试：🛑 STOP 涨幅低于阈值强制停手
-
-**4. 反例黑名单 8 条**（明文禁止的反模式）
-
-1. 同一个 AI 又改又评（SkillLens 实证：LLM 自评准确率仅 46.4%）
-2. 用 `git reset --hard` 当回滚手段（应用 `git revert`）
-3. 为凑分而堆冗余
-4. 跳过测试提示词直接评分
-5. 一轮内改多个维度
-6. 干跑比例 > 30%
-7. 静默跳过异常
-8. 忽视维度相关簇
-
-**5. 实测验证数据**
-
-- huashu-gpt-image skill：**80.8 → 91.5 → 91.65**（+10.85，6 个独立评委共识）
-- darwin-skill 自评：**86.05 → 92.05 → 92.7**
-
----
-
-## 核心循环
-
-![Core Loop](assets/chart-loop.png)
-
----
-
-## 为什么做这个
-
-Agent Skill 生态在快速扩张。Hermes、Claude Code、Codex、OpenClaw、Trae、CodeBuddy 等工具都支持 SKILL.md 格式。当你有 10 个 Skills 时可以手动维护；当你有 60+ 个 Skills 时，你需要一个系统。
-
-传统的 Skill 审查是**纯结构性的**：检查格式对不对、步骤有没有编号、路径能不能访问。但一个格式完美的 Skill，跑出来的效果可能很差。
-
-达尔文.skill 同时评估**结构质量**和**实际效果**，然后只保留真正有改进的修改。
-
----
-
-## 从 autoresearch 到 Skill Optimizer
-
-这个项目直接受 Karpathy autoresearch 启发。autoresearch 的做法是：写一个 `program.md` 定义目标和约束，让 agent 自主生成和测试代码变更，只保留可测量的改进。
-
-我们把同样的思路搬到了 Skill 优化：
-
-| autoresearch | 达尔文.skill | 为什么这样映射 |
-|:---|:---|:---|
-| `program.md` | 本 SKILL.md | 定义评估标准和约束规则 |
-| `train.py` | 每个待优化的 SKILL.md | 被优化的资产，每次实验只改它 |
-| `val_bpb` | 9 维加权总分（满分 100） | 可量化的优化目标 |
-| `git ratchet` | keep / revert 机制 | 只保留有改进的 commit |
-| `test set` | test-prompts.json | 验证改进是否真的有效 |
-| 全自主运行 | **人在回路** | Skill 的好坏比 loss 更微妙，需要人的判断 |
-
----
-
-## 五条核心原则
-
-| # | 原则 | 说明 |
-|:---|:---|:---|
-| 01 | **单一可编辑资产** | 每次只改一个 SKILL.md，变量可控，改进可归因 |
-| 02 | **双重评估** | 结构评分（静态分析）+ 效果验证（跑测试看输出） |
-| 03 | **棘轮机制** | 只保留改进，自动回滚退步，分数只升不降 |
-| 04 | **独立评分** | 评分用子 agent，避免「自己改自己评」的偏差（SkillLens 实证 LLM 自评仅 46.4% 准确率） |
-| 05 | **人在回路** | 每个 Skill 优化完后暂停，用户确认再继续下一个 |
-
----
-
-## 9 维度评估体系
-
-总分 100。结构维度靠静态分析，效果维度必须实测。v2.0 新增三个维度直接来自 SkillLens 论文的实证 rubric。
-
-![Evaluation Rubric](assets/chart-rubric.png)
-
-新增的三个维度（SkillLens 73.8% rubric 药方）：
-
-| 维度 | 说明 |
-|:---|:---|
-| **失败模式编码** | 显式编码已知失败路径，不是简单「别犯错」式叮嘱 |
-| **可执行具体性** | 禁用「建议/可以考虑/根据情况/灵活把握/视情况而定」等模糊措辞 |
-| **高风险行动黑名单** | rm / git reset --hard / force push 等破坏性操作必须明文列禁 |
-
-> 实测表现权重最高。Skill 写得再漂亮，跑出来效果不好就是零。
-
----
-
-## 优化循环：5 个阶段
-
-系统在每个阶段内自主运行，但在阶段之间暂停等待人类确认。
-
-![Optimization Lifecycle](assets/chart-phases.png)
-
-**Phase 2 的核心逻辑**（v2.0 强化）：
-
-1. 找出得分最低的维度
-2. 针对该维度生成 1 个具体改进方案（一轮只改一个维度，反例黑名单第 5 条）
-3. 编辑 SKILL.md，git commit
-4. 启动 **2 个独立子 agent** 重新评分（下一轮换全新评委，避免锚定）
-5. 新分 > 旧分 → 保留；否则 → `git revert`（禁用 `git reset --hard`，反例黑名单第 2 条）
-6. 单轮涨幅 < 1 分 → 自动早停（避免凑分堆冗余）
-7. 🔴 CHECKPOINT 暂停，展示 diff + 分数变化，等用户确认
-
----
-
-## 棘轮机制
-
-分数只能上升。每一轮要么改进 Skill，要么干净地回滚。不会随时间积累局部退化。
-
-![Ratchet Mechanism](assets/chart-ratchet.png)
-
-轮次 2 的 75 分低于当前最优的 78 分，被自动回滚。有效基线始终锁定在 78，后续改进从 78 继续。
-
----
+- [references/hermes-tool-mapping.md](references/hermes-tool-mapping.md)
+- [references/hermes-safety-policy.md](references/hermes-safety-policy.md)
+- [references/hermes-results-ledger.md](references/hermes-results-ledger.md)
+- [templates/results.tsv.template](templates/results.tsv.template)
+- [templates/skill-evolution-report.md](templates/skill-evolution-report.md)
+- [templates/cron-evaluation-prompt.md](templates/cron-evaluation-prompt.md)
+- [scripts/validate_hermes_skill_bundle.py](scripts/validate_hermes_skill_bundle.py)
 
 ## 快速开始
+
+安装时复制完整目录。这个 bundle 依赖 `references/`、`templates/` 和 `scripts/`，单独拿主 skill 文件会缺资源。
 
 ```bash
 git clone https://github.com/Leemuyi/darwin-skill-harness.git
@@ -178,13 +60,47 @@ mkdir -p ~/.hermes/skills
 cp -R darwin-skill-harness ~/.hermes/skills/darwin-skill-harness
 ```
 
-> 为什么不用 raw `SKILL.md` 安装？这个 skill 依赖 `scripts/`、`templates/`、`references/` 和 `test-prompts.json`。必须安装完整目录，否则成果卡片生成和测试 prompt 工作流会缺资源。
+在 Hermes 会话里重新加载 skills 后使用：
 
-安装后在任何支持 Skill 的 Agent 工具中说「优化所有skills」或「优化某个skill」就行。Hermes CLI 会话中可用 `/reload-skills` 重新加载已复制的 skill。
+```text
+优化 huashu-research 这个 skill
+```
 
-无法访问 GitHub 的朋友，可以下载 zip 包并按当前 runtime 的 skill 目录安装。Hermes 用户可将完整目录放到 `~/.hermes/skills/darwin-skill-harness/`；其他 runtime 请使用各自的 `skills/<skill-name>/` 约定路径。
+或只评估不修改：
 
-如果需要生成成果卡片截图，先在仓库目录安装脚本依赖：
+```text
+评估所有 Hermes skills 的质量
+```
+
+## 单 Skill 优化流程
+
+1. **Scope discovery**：`todo` 建批次状态，读取目标 skill，`session_search` 查历史证据，git 创建审计分支。
+2. **测试 prompt 确认**：为目标 skill 设计 2-3 个 happy path / ambiguous / failure mode prompt，用户确认后继续。
+3. **Baseline full_test**：`delegate_task` 跑 with_skill、baseline、独立 judge，生成 9 维基线分。
+4. **安全 patch**：已安装 Hermes skill 优先走 `skill_manage`；开发目录走小 patch。
+5. **重测和棘轮**：重跑 full_test。分数严格上升才 keep，否则 revert。
+6. **报告和审计**：更新 `results.tsv`，输出 report，跑 git diff audit，用户确认后再 commit。
+
+## 安全 Checkpoints
+
+这些动作必须暂停等用户确认：
+
+- 优化范围不明确或包含多个 skills
+- 测试 prompt 进入 baseline 前
+- 任何 patch 前，尤其是涉及权限、配置、cron、外部副作用
+- 创建、删除、重命名 skill
+- commit 前
+- 真实 cron 创建或修改前
+
+明令禁止：写入或泄露 token/API key/password，自动发布，自动发送外部消息，自动改 Hermes config，`git reset --hard`，force push，同一上下文自改自评。
+
+## Cron 只做报告
+
+[templates/cron-evaluation-prompt.md](templates/cron-evaluation-prompt.md) 只是 report-only 模板。它用于周期性发现候选问题，不自动 patch、不自动 commit、不自动创建或修改 cron。真实 cron 需要用户另行确认。
+
+## 结果卡片
+
+截图 helper 保留为轻量 Playwright 脚本：
 
 ```bash
 cd ~/.hermes/skills/darwin-skill-harness
@@ -192,76 +108,27 @@ npm ci
 node scripts/screenshot.mjs templates/result-card.html /tmp/darwin-result-card.png
 ```
 
----
+## 本地验证
 
-## 设计灵感
+```bash
+python3 scripts/validate_hermes_skill_bundle.py
+node --check scripts/screenshot.mjs
+npm ci
+npm run check:screenshot
+node scripts/screenshot.mjs templates/result-card.html /tmp/darwin-hermes-card.png
+git diff --check
+```
 
-这个项目的设计直接受 **Andrej Karpathy 的 [autoresearch](https://github.com/karpathy/autoresearch)** 启发。
+## 研究来源
 
-核心机制完全相同：**只保留可测量的改进，其余全部回滚。**
+Darwin 的评分和验证机制来自：
 
-v2.0 在此基础上吸收了微软研究院 2026-05-22 发布的两篇论文：[SkillLens](https://arxiv.org/abs/2605.23899) 提供了实证验证的 rubric 设计，[SkillOpt](https://arxiv.org/abs/2605.23904) 提供了 validation-gated edits 的形式化框架。
+- Microsoft Research, *From Raw Experience to Skill Consumption: A Systematic Study of Model-Generated Agent Skills*, arXiv:2605.23899.
+- Microsoft Research, *SkillOpt: Executive Strategy for Self-Evolving Agent Skills*, arXiv:2605.23904.
+- Andrej Karpathy, *autoresearch*.
 
----
-
-## References & Credits
-
-v2.0 的设计直接基于以下学术工作。强烈推荐 skill 生态的研究者和工程师阅读：
-
-### SkillLens
-
-> Microsoft Research. *From Raw Experience to Skill Consumption: A Systematic Study of Model-Generated Agent Skills.* arXiv:2605.23899, 2026.
-
-- 论文：https://arxiv.org/abs/2605.23899
-- **贡献**：实证验证的 73.8% rubric 药方。达尔文.skill v2.0 的三个新维度（Failure Mechanism Encoding / Actionable Specificity / High-Risk Action Blacklist）直接来自该论文。同时也是「同一个 AI 又改又评」反模式的实证来源——LLM 自评准确率仅 46.4%。
-
-### SkillOpt
-
-> Microsoft Research. *SkillOpt: Executive Strategy for Self-Evolving Agent Skills.* arXiv:2605.23904, 2026.
-
-- 论文：https://arxiv.org/abs/2605.23904
-- 项目页：https://microsoft.github.io/SkillOpt/
-- 代码：https://github.com/microsoft/SkillOpt
-- **贡献**：validation-gated edits 的形式化框架。把 skill 当作 frozen 模型的「外部可训练状态」，每次编辑都必须通过独立验证才能保留。达尔文.skill v2.0 的多评委独立审查、评委不复用、早停机制、干跑比例控制都对齐了该框架。
-
-### autoresearch
-
-> Andrej Karpathy. *autoresearch.* GitHub repository, 2026.
-
-- 代码：https://github.com/karpathy/autoresearch
-- **贡献**：达尔文.skill 1.0 的原始灵感来源。核心机制（program.md / train.py / val_bpb / git ratchet / test set）的映射逻辑完全继承自 autoresearch。
-
-**达尔文 vs SkillOpt 的关键区别**：SkillOpt 是全自主系统，达尔文.skill 强调 human-in-the-loop——Skill 的好坏比 validation loss 更微妙，关键阶段（基线评估、单维度优化、回归测试）强制暂停，让人来做最终判断。
-
----
-
-## 关于作者
-
-| | |
-|:---|:---|
-| 🌐 官网 | [bookai.top](https://bookai.top) · [huasheng.ai](https://www.huasheng.ai) |
-| 𝕏 Twitter | [@AlchainHust](https://x.com/AlchainHust) |
-| 📺 B站 | [花叔](https://space.bilibili.com/14097567) |
-| ▶️ YouTube | [@Alchain](https://www.youtube.com/@Alchain) |
-| 📕 小红书 | [花叔](https://www.xiaohongshu.com/user/profile/5abc6f17e8ac2b109179dfdf) |
-| 💬 公众号 | 微信搜「花叔」 |
-
----
+更多证据见 [references/skilllens-evidence.md](references/skilllens-evidence.md)。
 
 ## 许可证
 
 MIT
-
----
-
-<div align="center">
-
-**[女娲](https://github.com/alchaincyf/nuwa-skill)** 造 Skill。<br>
-**达尔文** 让 Skill 进化。<br><br>
-*只保留改进，时间就站在你这边。*
-
-<br>
-
-MIT License © [花叔 Huashu](https://github.com/alchaincyf)
-
-</div>
