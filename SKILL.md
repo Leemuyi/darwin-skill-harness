@@ -1,6 +1,13 @@
 ---
 name: darwin-skill-harness
 description: "Hermes-native Darwin Skill Harness: safely evaluates and evolves Agent Skills with todo, session_search, delegate_task, skill_manage, git audit, a 9-dimension rubric, full_test-first validation, independent judges, keep/revert ratchet, results.tsv ledger, user checkpoints, and high-risk action blacklists. Use when the user asks to optimize, score, review, migrate, or continuously improve one skill or a skill bundle."
+version: 2.0.0-hermes.1
+author: Maoning / Hermes Agent
+license: MIT
+metadata:
+  hermes:
+    tags: [skills, self-improvement, evaluation, hermes-agent, safety]
+    related_skills: [hermes-agent, hermes-agent-skill-authoring, maoning-self-evolving-skills]
 ---
 
 # Hermes Native Darwin Skill Harness

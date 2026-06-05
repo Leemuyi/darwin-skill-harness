@@ -86,14 +86,17 @@ def check_required_files() -> None:
 
 
 def check_frontmatter() -> None:
-    data = parse_frontmatter(read("SKILL.md"))
-    if not data.get("name"):
-        fail("frontmatter missing name")
+    text = read("SKILL.md")
+    data = parse_frontmatter(text)
+    for key in ("name", "description", "version", "author", "license"):
+        if not data.get(key):
+            fail(f"frontmatter missing {key}")
     description = data.get("description", "")
-    if not description:
-        fail("frontmatter missing description")
     if len(description) > 1024:
         fail(f"description exceeds 1024 chars: {len(description)}")
+    for required in ("metadata:", "  hermes:", "    tags:", "    related_skills:"):
+        if required not in text.split("\n---\n", 1)[0]:
+            fail(f"frontmatter missing {required.strip()}")
 
 
 def check_skill_content() -> None:
